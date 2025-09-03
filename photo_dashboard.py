@@ -66,3 +66,4 @@ else:
         with cols[idx % 4]:
             st.image(photo["thumbnailLink"], caption=photo["name"])
             st.markdown(f"[🔗 View / Download]({photo['webViewLink']})")
+
