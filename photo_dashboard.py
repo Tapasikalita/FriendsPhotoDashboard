@@ -14,7 +14,7 @@ def get_credentials():
                 st.secrets["gcp_service_account"],
                 scopes=["https://www.googleapis.com/auth/drive.readonly"],
             )
-            st.sidebar.success("Loaded credentials from secrets.toml ✅")
+            st.sidebar.success("✅ Loaded credentials from secrets.toml")
             return creds
 
         # Case 2: Running locally → load from JSON file
@@ -23,7 +23,7 @@ def get_credentials():
                 "service_account.json",
                 scopes=["https://www.googleapis.com/auth/drive.readonly"],
             )
-            st.sidebar.success("Loaded credentials from service_account.json ✅")
+            st.sidebar.success("✅ Loaded credentials from service_account.json")
             return creds
 
         else:
@@ -49,7 +49,7 @@ def list_images(folder_id):
             .list(
                 q=f"'{folder_id}' in parents and mimeType contains 'image/' and trashed=false",
                 pageSize=50,
-                fields="files(id, name, mimeType, webViewLink, webContentLink)",
+                fields="files(id, name, mimeType, webViewLink)",
             )
             .execute()
         )
@@ -62,7 +62,19 @@ def list_images(folder_id):
 # ================================
 # 3. Streamlit UI
 # ================================
+st.set_page_config(page_title="📸 Friends Photo Dashboard", layout="wide")
 st.title("📸 Friends Photo Dashboard")
+
+st.markdown("""
+Welcome to your **Group Photo Dashboard**! 🎉  
+
+**How it works:**  
+1. Upload your photos into the shared Google Drive folder.  
+2. This dashboard automatically shows all uploaded photos.  
+3. Click any photo to open/download it in full size.  
+
+⚡ *No need to merge files — just drop them in Drive and they appear here.*
+""")
 
 # Put your Google Drive Folder ID here
 FOLDER_ID = "1W7ecBMXSIHGVEEKZIkYqFZmHGx3miHk5"
@@ -70,10 +82,12 @@ FOLDER_ID = "1W7ecBMXSIHGVEEKZIkYqFZmHGx3miHk5"
 photos = list_images(FOLDER_ID)
 
 if photos:
-    st.success(f"Found {len(photos)} photos in Drive ✅")
+    st.success(f"✅ Found {len(photos)} photos in Drive")
 
     for photo in photos:
-        st.image(photo["webContentLink"], caption=photo["name"], use_container_width=True)
+        # Use direct "uc?id=" link for images
+        img_url = f"https://drive.google.com/uc?id={photo['id']}"
+        st.image(img_url, caption=photo["name"], use_container_width=True)
         st.markdown(f"[🔗 Open in Google Drive]({photo['webViewLink']})")
 else:
-    st.warning("No photos found in the folder.")
+    st.warning("⚠️ No photos found in the folder. Make sure the folder is shared with your service account.")
