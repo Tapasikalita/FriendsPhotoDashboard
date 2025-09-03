@@ -37,7 +37,7 @@ def list_images(folder_id):
 st.title("📸 Friends Photo Dashboard")
 
 # 🔑 Replace with your Google Drive folder ID
-FOLDER_ID = "YOUR_FOLDER_ID_HERE"
+FOLDER_ID = "1W7ecBMXSIHGVEEKZIkYqFZmHGx3miHk5"
 
 photos = list_images(FOLDER_ID)
 
@@ -55,3 +55,4 @@ else:
                 data=photo["webContentLink"],
                 file_name=photo["name"],
             )
+
