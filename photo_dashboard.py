@@ -1,53 +1,47 @@
 import streamlit as st
-from googleapiclient.discovery import build
 from google.oauth2 import service_account
+from googleapiclient.discovery import build
 
-# -----------------------
+# -----------------------------
 # CONFIGURATION
-# -----------------------
-FOLDER_ID = "YOUR_DRIVE_FOLDER_ID"  # Replace with actual folder ID
+# -----------------------------
+FOLDER_ID = "1W7ecBMXSIHGVEEKZIkYqFZmHGx3miHk5"  # replace with your folder ID
 
-# Load service account credentials
+# Load credentials from local JSON file
 creds = service_account.Credentials.from_service_account_file(
-    "service_account.json",  # Path to JSON key
+    "service_account.json",  # JSON file in same folder
     scopes=["https://www.googleapis.com/auth/drive.readonly"],
 )
 
-# Build Google Drive API client
-drive_service = build("drive", "v3", credentials=creds)
+# Connect to Google Drive API
+service = build("drive", "v3", credentials=creds)
 
-
-def list_images_from_drive(folder_id):
-    """Fetch image files from Google Drive folder."""
-    query = f"'{folder_id}' in parents and mimeType contains 'image/'"
-    results = drive_service.files().list(
-        q=query, fields="files(id, name, mimeType, webContentLink, webViewLink)"
+def list_images(folder_id):
+    """List image files from Google Drive folder"""
+    results = service.files().list(
+        q=f"'{folder_id}' in parents and mimeType contains 'image/' and trashed=false",
+        fields="files(id, name, mimeType, webViewLink, webContentLink)"
     ).execute()
     return results.get("files", [])
 
-
-# -----------------------
-# STREAMLIT UI
-# -----------------------
+# -----------------------------
+# STREAMLIT APP
+# -----------------------------
 st.set_page_config(page_title="📸 Friends Photo Dashboard", layout="wide")
 st.title("📸 Friends Photo Dashboard")
 
 st.markdown("""
-Upload your photos into the **shared Google Drive folder**.  
-This dashboard automatically shows all uploaded photos.  
-Click any photo to open/download it in full size.  
+Upload your photos into the shared **Google Drive folder** 📂.  
+They will appear below automatically for download or viewing.
 """)
 
-# Fetch and display photos
-photos = list_images_from_drive(FOLDER_ID)
+# Fetch photos
+photos = list_images(FOLDER_ID)
 
 if not photos:
-    st.warning("⚠️ No photos found in the Drive folder yet. Upload some!")
+    st.warning("⚠️ No photos found in the folder yet. Upload some!")
 else:
-    st.success(f"✅ Found {len(photos)} photos in Google Drive!")
+    for photo in photos:
+        st.image(photo["webContentLink"], caption=photo["name"], use_column_width=True)
+        st.markdown(f"[📥 Download]({photo['webContentLink']})")
 
-    cols = st.columns(4)
-    for idx, photo in enumerate(photos):
-        col = cols[idx % 4]
-        col.image(f"https://drive.google.com/uc?id={photo['id']}", caption=photo["name"], use_column_width=True)
-        col.markdown(f"[📥 Download]({photo['webContentLink']})")
